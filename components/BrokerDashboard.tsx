@@ -30,17 +30,17 @@ type CaseRow = {
   tasks: Array<{ status: string }>;
 };
 
-const statLabels: Array<{ key: string; label: string; icon: typeof ShieldCheck }> = [
-  { key: "newRequests", label: "New requests", icon: ClipboardList },
-  { key: "newClaims", label: "New claims", icon: ShieldCheck },
-  { key: "urgentCases", label: "Urgent", icon: AlertTriangle },
-  { key: "documentsReceived", label: "Documents received", icon: FileStack },
-  { key: "clientQuestions", label: "Client questions", icon: MessageSquareWarning },
-  { key: "callbacks", label: "Callbacks", icon: PhoneCall },
-  { key: "dueToday", label: "Tasks due today", icon: ClipboardList },
-  { key: "overdue", label: "Overdue tasks", icon: AlertTriangle },
-  { key: "formsAwaitingReview", label: "Forms awaiting review", icon: FileStack },
-  { key: "recentlyCompleted", label: "Recently completed", icon: ShieldCheck }
+const statLabels: Array<{ key: string; label: string; icon: typeof ShieldCheck; href: string }> = [
+  { key: "newRequests", label: "New requests", icon: ClipboardList, href: "/broker?view=new-requests#cases" },
+  { key: "newClaims", label: "New claims", icon: ShieldCheck, href: "/broker?view=new-claims#cases" },
+  { key: "urgentCases", label: "Urgent", icon: AlertTriangle, href: "/broker?view=urgent#cases" },
+  { key: "documentsReceived", label: "Documents received", icon: FileStack, href: "/broker?view=documents#cases" },
+  { key: "clientQuestions", label: "Client questions", icon: MessageSquareWarning, href: "/broker?view=questions#cases" },
+  { key: "callbacks", label: "Callbacks", icon: PhoneCall, href: "/broker?view=callbacks#cases" },
+  { key: "dueToday", label: "Tasks due today", icon: ClipboardList, href: "/broker?view=due-today#cases" },
+  { key: "overdue", label: "Overdue tasks", icon: AlertTriangle, href: "/broker?view=overdue#cases" },
+  { key: "formsAwaitingReview", label: "Forms awaiting review", icon: FileStack, href: "/broker?view=forms#cases" },
+  { key: "recentlyCompleted", label: "Recently completed", icon: ShieldCheck, href: "/broker?view=recently-completed#cases" }
 ];
 
 export function BrokerDashboard({ summary, cases }: { summary: DashboardSummary; cases: CaseRow[] }) {
@@ -61,17 +61,17 @@ export function BrokerDashboard({ summary, cases }: { summary: DashboardSummary;
         {statLabels.map((item) => {
           const Icon = item.icon;
           return (
-            <div className="stat-card" key={item.key}>
+            <Link className="stat-card" href={item.href} key={item.key} aria-label={`View ${item.label}`}>
               <small>
                 <Icon size={15} /> {item.label}
               </small>
               <strong>{summary.cards[item.key] ?? 0}</strong>
-            </div>
+            </Link>
           );
         })}
       </section>
 
-      <section className="broker-panel">
+      <section className="broker-panel" id="cases">
         <div className="panel-header">
           <h2>Prioritized Task List</h2>
         </div>

@@ -1,4 +1,4 @@
-import { CaseStatus, Priority, RequestType } from "@prisma/client";
+import { CaseStatus, Prisma, Priority, RequestType, TaskStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { parseJson } from "@/lib/json";
 
@@ -100,32 +100,71 @@ export async function getDashboardSummary(brokerId: string) {
   };
 }
 
-export async function listCases(
-  brokerId: string,
-  filters: {
-    status?: CaseStatus;
-    priority?: Priority;
-    requestType?: RequestType;
-    q?: string;
+export type CaseListFilters = {
+  status?: CaseStatus;
+  statuses?: CaseStatus[];
+  statusNotIn?: CaseStatus[];
+  priority?: Priority;
+  requestType?: RequestType;
+  q?: string;
+  urgent?: boolean;
+  attachmentsCreatedSince?: Date;
+  createdSince?: Date;
+  updatedSince?: Date;
+  formAwaitingReview?: boolean;
+  taskDue?: "today" | "overdue";
+};
+
+export async function listCases(brokerId: string, filters: CaseListFilters) {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(tomorrowStart.getDate() + 1);
+  const andFilters: Prisma.ServiceCaseWhereInput[] = [];
+
+  if (filters.urgent) {
+    andFilters.push({ OR: [{ priority: Priority.URGENT }, { status: CaseStatus.URGENT }] });
   }
-) {
+
+  if (filters.q) {
+    andFilters.push({
+      OR: [
+        { reference: { contains: filters.q } },
+        { title: { contains: filters.q } },
+        { description: { contains: filters.q } },
+        { client: { fullName: { contains: filters.q } } },
+        { client: { phone: { contains: filters.q } } }
+      ]
+    });
+  }
+
+  if (filters.taskDue) {
+    andFilters.push({
+      tasks: {
+        some: {
+          status: { in: [TaskStatus.OPEN, TaskStatus.IN_PROGRESS] },
+          dueAt: filters.taskDue === "today" ? { gte: todayStart, lt: tomorrowStart } : { lt: now }
+        }
+      }
+    });
+  }
+
   const cases = await prisma.serviceCase.findMany({
     where: {
       brokerId,
       ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.statuses ? { status: { in: filters.statuses } } : {}),
+      ...(filters.statusNotIn ? { status: { notIn: filters.statusNotIn } } : {}),
       ...(filters.priority ? { priority: filters.priority } : {}),
       ...(filters.requestType ? { requestType: filters.requestType } : {}),
-      ...(filters.q
-        ? {
-            OR: [
-              { reference: { contains: filters.q } },
-              { title: { contains: filters.q } },
-              { description: { contains: filters.q } },
-              { client: { fullName: { contains: filters.q } } },
-              { client: { phone: { contains: filters.q } } }
-            ]
-          }
-        : {})
+      ...(filters.attachmentsCreatedSince !== undefined
+        ? { attachments: { some: { createdAt: { gte: filters.attachmentsCreatedSince } } } }
+        : {}),
+      ...(filters.createdSince ? { createdAt: { gte: filters.createdSince } } : {}),
+      ...(filters.updatedSince ? { updatedAt: { gte: filters.updatedSince } } : {}),
+      ...(filters.formAwaitingReview ? { formSubmissions: { some: { confirmedAt: null } } } : {}),
+      ...(andFilters.length > 0 ? { AND: andFilters } : {})
     },
     include: {
       client: true,
