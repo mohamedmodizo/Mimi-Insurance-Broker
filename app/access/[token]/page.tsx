@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BriefcaseBusiness, MessageCircle, ShieldCheck } from "lucide-react";
 import { notFound } from "next/navigation";
 import { validatePortalToken } from "@/lib/portalAccess";
+import { InsurerBackdrop } from "@/components/InsurerBackdrop";
 
 export default async function AccessPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -11,6 +12,7 @@ export default async function AccessPage({ params }: { params: Promise<{ token: 
   return (
     <main className="entry-screen">
       <section className="entry-band access-band">
+        <InsurerBackdrop />
         <div className="entry-content access-content">
           <div className="brand-row">
             <div className="brand-mark" aria-hidden="true">
