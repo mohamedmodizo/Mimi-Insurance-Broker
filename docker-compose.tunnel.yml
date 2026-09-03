@@ -1,0 +1,9 @@
+services:
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: insurance-client-service-portal-tunnel
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    command: tunnel --no-autoupdate --url http://app:3000

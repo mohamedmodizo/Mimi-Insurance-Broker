@@ -1,0 +1,38 @@
+{
+  "name": "insurance-client-service-portal",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "build:cloud": "prisma generate && pnpm db:init && pnpm db:seed && next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "db:init": "tsx scripts/init-db.ts",
+    "db:push": "tsx scripts/init-db.ts",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:reset": "tsx scripts/reset-db.ts && tsx scripts/init-db.ts && tsx scripts/seed.ts",
+    "otp": "tsx scripts/current-otp.ts",
+    "smoke": "tsx scripts/smoke-test.ts",
+    "docker:up": "docker compose up --build -d app",
+    "docker:tunnel": "docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.2",
+    "@vercel/blob": "^2.8.0",
+    "lucide-react": "^0.468.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prisma": "^6.16.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

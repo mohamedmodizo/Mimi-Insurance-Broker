@@ -1,0 +1,9 @@
+{
+  "name": "Insurance Client Assistance Portal",
+  "short_name": "Insurance Portal",
+  "start_url": "/portal/demo-secure-link-2026",
+  "display": "standalone",
+  "background_color": "#efe7fb",
+  "theme_color": "#5a3d8e",
+  "icons": []
+}

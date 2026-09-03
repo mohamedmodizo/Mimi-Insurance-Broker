@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: insurance-client-service-portal-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: insurance_portal
+      POSTGRES_PASSWORD: insurance_portal
+      POSTGRES_DB: insurance_portal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U insurance_portal -d insurance_portal"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - insurance_portal_postgres:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+    image: insurance-client-service-portal:latest
+    container_name: insurance-client-service-portal
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://insurance_portal:insurance_portal@db:5432/insurance_portal?schema=public
+      UPLOAD_STORAGE_DIR: /data/uploads
+      SESSION_COOKIE_NAME: insurance_portal_session
+      BROKER_DEMO_EMAIL: broker@example.com
+      BROKER_DEMO_PASSWORD: BrokerDemo!2026
+      BROKER_DEMO_TOTP_SECRET: JBSWY3DPEHPK3PXP
+      ENABLE_DEMO_LOGIN: "false"
+      ENABLE_DEMO_MFA_HELPER: "true"
+    ports:
+      - "8080:3000"
+    volumes:
+      - insurance_portal_data:/data
+
+volumes:
+  insurance_portal_data:
+  insurance_portal_postgres:

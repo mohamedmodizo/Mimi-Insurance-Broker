@@ -1,0 +1,527 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  BROKER
+  STAFF
+  ADMIN
+}
+
+enum RequestType {
+  CLAIM
+  DOCUMENT_UPLOAD
+  FORM_COMPLETION
+  POLICY_QUESTION
+  POLICY_CHANGE
+  QUOTE
+  CALLBACK
+  EMERGENCY
+  OTHER
+}
+
+enum ClaimType {
+  MOTOR
+  MEDICAL
+  PROPERTY
+  FIRE
+  THEFT
+  TRAVEL
+  PERSONAL_ACCIDENT
+  BUSINESS
+  LIABILITY
+  MARINE_CARGO
+  OTHER
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum CaseStatus {
+  NEW
+  AWAITING_BROKER_REVIEW
+  AWAITING_CLIENT_INFORMATION
+  AWAITING_INSURER
+  IN_PROGRESS
+  URGENT
+  COMPLETED
+  CLOSED
+}
+
+enum MessageAuthor {
+  CLIENT
+  AI
+  BROKER
+  SYSTEM
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  BLOCKED
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  IN_APP
+  PUSH
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+  MUTED
+}
+
+enum AttachmentStatus {
+  RECEIVED
+  VALIDATED
+  QUARANTINED
+  REJECTED
+}
+
+enum KnowledgeDocumentStatus {
+  DRAFT
+  APPROVED
+  ARCHIVED
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String
+  phone          String?
+  role           Role
+  passwordHash   String?
+  passwordSalt   String?
+  totpSecret     String?
+  active         Boolean   @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  clientProfile  Client?   @relation("ClientUser")
+  brokerProfile  Broker?   @relation("BrokerUser")
+  staffProfile   Staff?    @relation("StaffUser")
+  sessions       Session[]
+  auditLogs      AuditLog[]
+  brokerNotes    BrokerNote[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  tokenHash    String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Broker {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  agencyName          String
+  country             String   @default("Kenya")
+  timezone            String   @default("Africa/Nairobi")
+  officeHoursJson     String   @default("{\"days\":[1,2,3,4,5],\"open\":\"08:30\",\"close\":\"17:00\"}")
+  emergencyConfigJson String   @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation("BrokerUser", fields: [userId], references: [id], onDelete: Cascade)
+  clients             Client[]
+  accessLinks         ClientAccessLink[]
+  staff               Staff[]
+  insurers            Insurer[]
+  policies            Policy[]
+  cases               ServiceCase[]
+  knowledgeDocuments  KnowledgeDocument[]
+  formTemplates       FormTemplate[]
+  communicationPreferences CommunicationPreference[]
+}
+
+model Staff {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  brokerId        String
+  permissionsJson String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation("StaffUser", fields: [userId], references: [id], onDelete: Cascade)
+  broker          Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  assignedCases   ServiceCase[]
+  tasks           Task[]
+}
+
+model Client {
+  id                      String   @id @default(cuid())
+  userId                  String?  @unique
+  brokerId                String
+  fullName                String
+  phone                   String
+  email                   String?
+  nationalId              String?
+  customerNumber          String?
+  communicationPreference String   @default("SMS")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  user                    User?    @relation("ClientUser", fields: [userId], references: [id], onDelete: SetNull)
+  broker                  Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  policies                Policy[]
+  cases                   ServiceCase[]
+  conversations           Conversation[]
+  attachments             Attachment[]
+  accessLinks             ClientAccessLink[]
+
+  @@index([brokerId])
+  @@index([phone])
+  @@index([email])
+}
+
+model Insurer {
+  id                    String   @id @default(cuid())
+  brokerId              String
+  name                  String
+  logoUrl               String?
+  claimsEmail           String?
+  claimsTelephone       String?
+  emergencyAssistance   String?
+  website               String?
+  claimProcedure        String
+  requiredDocumentsJson String   @default("[]")
+  productsJson          String   @default("[]")
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  broker                Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  policies              Policy[]
+  cases                 ServiceCase[]
+  knowledgeDocuments    KnowledgeDocument[]
+
+  @@index([brokerId])
+}
+
+model Policy {
+  id              String   @id @default(cuid())
+  brokerId        String
+  clientId        String
+  insurerId       String?
+  policyNumber    String?
+  productName     String
+  insuranceType   String
+  status          String   @default("Active")
+  startDate       DateTime?
+  endDate         DateTime?
+  documentsJson   String   @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  broker          Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  insurer         Insurer? @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+  cases           ServiceCase[]
+
+  @@index([brokerId])
+  @@index([clientId])
+  @@index([policyNumber])
+}
+
+model ClientAccessLink {
+  id          String    @id @default(cuid())
+  brokerId    String
+  clientId    String?
+  tokenHash   String    @unique
+  purpose     String    @default("CLIENT_ASSISTANCE")
+  expiresAt   DateTime
+  usedAt      DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  broker      Broker    @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  client      Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([brokerId])
+  @@index([clientId])
+  @@index([expiresAt])
+}
+
+model ServiceCase {
+  id                    String      @id @default(cuid())
+  reference             String      @unique
+  brokerId              String
+  clientId              String
+  policyId              String?
+  insurerId             String?
+  assignedStaffId       String?
+  requestType           RequestType
+  claimType             ClaimType?
+  title                 String
+  description           String
+  priority              Priority    @default(NORMAL)
+  status                CaseStatus  @default(NEW)
+  aiSummary             String
+  missingInfoJson       String      @default("[]")
+  submittedFormDataJson String      @default("{}")
+  afterHours            Boolean     @default(false)
+  completedAt           DateTime?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  broker                Broker      @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  client                Client      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  policy                Policy?     @relation(fields: [policyId], references: [id], onDelete: SetNull)
+  insurer               Insurer?    @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+  assignedStaff         Staff?      @relation(fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  claim                 Claim?
+  conversations         Conversation[]
+  attachments           Attachment[]
+  tasks                 Task[]
+  notifications         Notification[]
+  auditLogs             AuditLog[]
+  brokerNotes           BrokerNote[]
+  formSubmissions       FormSubmission[]
+
+  @@index([brokerId])
+  @@index([clientId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model Claim {
+  id                     String      @id @default(cuid())
+  caseId                 String      @unique
+  claimType              ClaimType
+  incidentDate           DateTime?
+  incidentLocation       String?
+  eventDescription       String
+  involvedSubject        String?
+  injuriesReported       Boolean?
+  emergencyServices      Boolean?
+  policeContacted        Boolean?
+  policeReference        String?
+  thirdPartiesInvolved   Boolean?
+  thirdPartyDetailsJson  String      @default("[]")
+  estimatedDamage        String?
+  dynamicAnswersJson     String      @default("{}")
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  case                   ServiceCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id          String    @id @default(cuid())
+  caseId      String?
+  clientId    String?
+  channel     String    @default("WEB_PORTAL")
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  aiSummary   String?
+  createdAt   DateTime  @default(now())
+
+  case        ServiceCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  client      Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  messages    Message[]
+
+  @@index([caseId])
+  @@index([clientId])
+}
+
+model Message {
+  id             String        @id @default(cuid())
+  conversationId String
+  senderRole     MessageAuthor
+  content        String
+  metadataJson   String        @default("{}")
+  createdAt      DateTime      @default(now())
+
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([createdAt])
+}
+
+model Attachment {
+  id                  String           @id @default(cuid())
+  brokerId            String?
+  clientId            String?
+  caseId              String?
+  uploadSessionId     String
+  originalName        String
+  storedName          String
+  mimeType            String
+  sizeBytes           Int
+  sha256              String
+  category            String
+  status              AttachmentStatus @default(RECEIVED)
+  storagePath         String
+  uploadedByClient    Boolean          @default(true)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  client              Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  case                ServiceCase?     @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  @@index([uploadSessionId])
+  @@index([caseId])
+  @@index([clientId])
+}
+
+model FormTemplate {
+  id              String   @id @default(cuid())
+  brokerId        String
+  name            String
+  description     String
+  version         Int      @default(1)
+  schemaJson      String
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  broker          Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  submissions     FormSubmission[]
+}
+
+model FormSubmission {
+  id              String      @id @default(cuid())
+  templateId      String
+  caseId          String
+  clientId        String
+  answersJson     String
+  consentText     String?
+  signatureName   String?
+  generatedPdfUrl String?
+  confirmedAt     DateTime?
+  createdAt       DateTime    @default(now())
+
+  template        FormTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  case            ServiceCase  @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id              String      @id @default(cuid())
+  caseId          String
+  assignedStaffId String?
+  title           String
+  detail          String
+  status          TaskStatus  @default(OPEN)
+  priority        Priority    @default(NORMAL)
+  dueAt           DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  case            ServiceCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  assignedStaff   Staff?      @relation(fields: [assignedStaffId], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+model Notification {
+  id             String              @id @default(cuid())
+  caseId         String?
+  channel        NotificationChannel
+  recipient      String
+  subject        String
+  body           String
+  status         NotificationStatus  @default(QUEUED)
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+
+  case           ServiceCase?        @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model KnowledgeDocument {
+  id              String                  @id @default(cuid())
+  brokerId        String
+  insurerId       String?
+  title           String
+  category        String
+  content         String
+  sourceType      String                  @default("MANUAL")
+  status          KnowledgeDocumentStatus @default(APPROVED)
+  tagsJson        String                  @default("[]")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  broker          Broker                  @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  insurer         Insurer?                @relation(fields: [insurerId], references: [id], onDelete: SetNull)
+
+  @@index([brokerId])
+  @@index([status])
+}
+
+model AuditLog {
+  id             String       @id @default(cuid())
+  caseId         String?
+  actorUserId    String?
+  actorType      String
+  action         String
+  detailsJson    String       @default("{}")
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime     @default(now())
+
+  case           ServiceCase? @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actor          User?        @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([actorUserId])
+  @@index([createdAt])
+}
+
+model BrokerNote {
+  id          String      @id @default(cuid())
+  caseId      String
+  authorId    String
+  body        String
+  createdAt   DateTime    @default(now())
+
+  case        ServiceCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  author      User        @relation(fields: [authorId], references: [id], onDelete: Restrict)
+
+  @@index([caseId])
+}
+
+model CommunicationPreference {
+  id                 String   @id @default(cuid())
+  brokerId           String
+  channel            NotificationChannel
+  enabled            Boolean  @default(true)
+  urgentOnlyAfterHours Boolean @default(true)
+  destination        String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  broker             Broker   @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+}

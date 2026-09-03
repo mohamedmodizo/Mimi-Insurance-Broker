@@ -1,0 +1,11 @@
+.env
+.env.*
+.vercel
+.vercel-cli-data
+.git
+.next
+node_modules
+work/storage
+outputs
+*.log
+tsconfig.tsbuildinfo
