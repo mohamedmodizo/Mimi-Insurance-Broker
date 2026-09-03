@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/LoginForm";
+import { InsurerBackdrop } from "@/components/InsurerBackdrop";
 import { getCurrentUser, userCanAccessBrokerArea } from "@/lib/security";
 
 export default async function BrokerLoginPage({ searchParams }: { searchParams: Promise<{ returnTo?: string }> }) {
@@ -10,6 +11,7 @@ export default async function BrokerLoginPage({ searchParams }: { searchParams: 
 
   return (
     <main className="auth-screen">
+      <InsurerBackdrop />
       <LoginForm
         demoEmail={process.env.BROKER_DEMO_EMAIL ?? "broker@example.com"}
         allowDemoLogin={process.env.NODE_ENV !== "production" || process.env.ENABLE_DEMO_LOGIN === "true"}

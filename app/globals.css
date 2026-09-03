@@ -999,9 +999,26 @@ textarea.text-field {
 }
 
 .auth-screen {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 100vh;
   display: grid;
-  place-items: center;
+  place-items: end center;
+  padding: 32px;
+  background: transparent;
+}
+
+.auth-screen .auth-box {
+  position: relative;
+  z-index: 1;
+  margin-bottom: clamp(20px, 5vh, 48px);
+}
+
+.auth-screen .insurer-backdrop-scene {
+  top: 20%;
+  width: min(48vw, 560px);
+  height: min(44vh, 360px);
 }
 
 .auth-box {
@@ -1100,6 +1117,9 @@ textarea.text-field {
     padding: 16px;
     box-shadow: none;
   }
+
+  .auth-screen .auth-box { margin-bottom: 16px; }
+  .auth-screen .insurer-backdrop-scene { top: 18%; width: 86vw; height: 250px; }
 
   .action-grid,
   .access-grid,
