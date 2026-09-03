@@ -68,7 +68,9 @@ button:disabled {
   display: grid;
   align-items: center;
   padding: 32px;
-  background: transparent;
+  background:
+    linear-gradient(115deg, rgba(76, 48, 124, 0.93), rgba(101, 83, 154, 0.74)),
+    linear-gradient(45deg, #45306d, #faf7ff);
 }
 
 .insurer-backdrop {
@@ -76,7 +78,7 @@ button:disabled {
   z-index: -2;
   inset: 0;
   overflow: hidden;
-  background: #111016;
+  background: #f7f8fb;
 }
 
 .insurer-backdrop::after {
@@ -84,8 +86,8 @@ button:disabled {
   inset: 0;
   content: "";
   background:
-    linear-gradient(90deg, rgba(10, 9, 13, 0.92), rgba(10, 9, 13, 0.52) 50%, rgba(10, 9, 13, 0.88)),
-    linear-gradient(180deg, rgba(10, 9, 13, 0.52), rgba(10, 9, 13, 0.9));
+    linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.58) 50%, rgba(255, 255, 255, 0.9)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.95));
 }
 
 .insurer-backdrop-glow {
@@ -97,7 +99,7 @@ button:disabled {
   border-radius: 50%;
   background: var(--insurer-accent);
   filter: blur(90px);
-  opacity: 0.34;
+  opacity: 0.27;
   transform: translate(-50%, -50%);
   transition: background 500ms ease;
 }
@@ -113,7 +115,7 @@ button:disabled {
   gap: 18px;
   width: min(64vw, 700px);
   height: min(64vw, 700px);
-  color: #fff;
+  color: var(--ink);
   text-align: center;
   transform: translate(-50%, -50%);
   animation: insurer-cinematic-reveal 5s both;
@@ -149,7 +151,7 @@ button:disabled {
   font-size: clamp(1.4rem, 3.4vw, 3rem);
   font-weight: 850;
   letter-spacing: 0.01em;
-  text-shadow: 0 2px 18px rgba(0,0,0,.7);
+  text-shadow: 0 2px 18px rgba(255,255,255,.9);
 }
 
 .insurer-backdrop-country {
@@ -185,7 +187,7 @@ button:disabled {
   width: 15%;
   height: 84%;
   content: "";
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.32), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.8), transparent);
   filter: blur(12px);
   transform: skewX(-18deg);
   animation: insurer-light-sweep 5s ease-out both;
@@ -239,7 +241,12 @@ button:disabled {
 
 .access-band {
   align-items: center;
+  background: transparent;
 }
+
+.access-band .entry-content { color: var(--ink); }
+.access-band .entry-content .eyebrow { color: var(--teal-2); }
+.access-band .entry-copy { color: var(--muted); }
 
 .access-content {
   width: min(920px, 100%);
