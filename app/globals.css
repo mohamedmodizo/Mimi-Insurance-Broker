@@ -232,13 +232,20 @@ button:disabled {
 }
 
 .access-band {
-  align-items: center;
+  align-items: end;
   background: transparent;
 }
 
 .access-band .entry-content { color: #fff; }
 .access-band .entry-content .eyebrow { color: rgba(255, 255, 255, 0.88); }
 .access-band .entry-copy { color: rgba(255, 255, 255, 0.9); }
+.access-band .access-content { margin-bottom: clamp(20px, 5vh, 48px); }
+.access-band .insurer-backdrop-scene { top: 20%; width: min(48vw, 560px); height: min(44vh, 360px); }
+
+@media (max-width: 650px) {
+  .access-band .access-content { margin-bottom: 16px; }
+  .access-band .insurer-backdrop-scene { top: 18%; width: 86vw; height: 250px; }
+}
 
 .access-content {
   width: min(920px, 100%);
