@@ -78,16 +78,8 @@ button:disabled {
   z-index: -2;
   inset: 0;
   overflow: hidden;
-  background: #f7f8fb;
-}
-
-.insurer-backdrop::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.58) 50%, rgba(255, 255, 255, 0.9)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.95));
+  background: var(--insurer-accent);
+  transition: background 600ms ease;
 }
 
 .insurer-backdrop-glow {
@@ -97,7 +89,7 @@ button:disabled {
   width: min(72vw, 720px);
   aspect-ratio: 1;
   border-radius: 50%;
-  background: var(--insurer-accent);
+  background: color-mix(in srgb, var(--insurer-accent) 76%, #fff);
   filter: blur(90px);
   opacity: 0.27;
   transform: translate(-50%, -50%);
@@ -244,9 +236,9 @@ button:disabled {
   background: transparent;
 }
 
-.access-band .entry-content { color: var(--ink); }
-.access-band .entry-content .eyebrow { color: var(--teal-2); }
-.access-band .entry-copy { color: var(--muted); }
+.access-band .entry-content { color: #fff; }
+.access-band .entry-content .eyebrow { color: rgba(255, 255, 255, 0.88); }
+.access-band .entry-copy { color: rgba(255, 255, 255, 0.9); }
 
 .access-content {
   width: min(920px, 100%);
