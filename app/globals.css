@@ -287,7 +287,21 @@ button:disabled {
 }
 
 .client-chat-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   padding: 18px;
+  background: transparent;
+}
+
+.client-chat-band > .insurer-backdrop { z-index: -2; }
+.client-chat-band .insurer-backdrop-scene { color: #fff; }
+.client-chat-band .insurer-backdrop-name { text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7); }
+.client-shell { position: relative; z-index: 1; }
+.client-shell .assistant-panel,
+.client-shell .workflow-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(14px);
 }
 
 .insurer-spotlight {

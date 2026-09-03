@@ -19,6 +19,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { claimCategories, clientQuestions, getClaimQuestions, getEssentialMissingInfo } from "@/lib/claimQuestions";
 import type { EmergencyConfig } from "@/lib/config";
 import { InsurerAdRotator } from "@/components/InsurerAdRotator";
+import { InsurerBackdrop } from "@/components/InsurerBackdrop";
 
 type PortalMode =
   | "home"
@@ -201,6 +202,7 @@ export function ClientPortal({
   return (
     <main className="client-app">
       <section className="client-chat-band">
+        <InsurerBackdrop />
         <InsurerAdRotator />
         <div className="client-shell">
           <div className="assistant-panel" aria-label="Assistant conversation">
