@@ -82,6 +82,10 @@ button:disabled {
   transition: background 600ms ease;
 }
 
+.insurer-backdrop.is-marquee {
+  background: #f1f3f7;
+}
+
 .insurer-backdrop-glow {
   position: absolute;
   top: 50%;
@@ -185,6 +189,60 @@ button:disabled {
   animation: insurer-light-sweep 5s ease-out both;
 }
 
+.insurer-marquee {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.insurer-marquee-track {
+  display: flex;
+  gap: 22px;
+  width: max-content;
+  padding: 24px;
+  animation: insurer-marquee-pass 18s linear both;
+}
+
+.insurer-marquee-card {
+  display: flex;
+  width: 188px;
+  min-height: 188px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--insurer-accent) 64%, #fff);
+  border-radius: 8px;
+  background: var(--insurer-accent);
+  box-shadow: 0 16px 32px rgba(46, 41, 62, 0.18);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 850;
+  text-align: center;
+}
+
+.insurer-marquee-card img {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: #fff;
+  padding: 12px;
+  object-fit: contain;
+}
+
+.insurer-marquee-card small {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.58rem;
+  letter-spacing: 0.13em;
+}
+
+@keyframes insurer-marquee-pass {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(-100%); }
+}
+
 @keyframes insurer-light-sweep {
   0%, 20% { opacity: 0; transform: translateX(0) skewX(-18deg); }
   36% { opacity: 1; }
@@ -195,13 +253,18 @@ button:disabled {
   .insurer-backdrop-scene,
   .insurer-backdrop-scene img,
   .insurer-backdrop-halo,
-  .insurer-backdrop-scene::after { animation-duration: 0.01ms; }
+  .insurer-backdrop-scene::after,
+  .insurer-marquee-track { animation-duration: 0.01ms; }
 }
 
 @media (max-width: 650px) {
   .insurer-backdrop-scene { width: 92vw; height: 92vw; gap: 12px; }
   .insurer-backdrop-scene img { border-width: 5px; padding: 12px; }
   .insurer-backdrop-country { font-size: 0.58rem; }
+  .insurer-marquee-track { gap: 12px; padding: 14px; }
+  .insurer-marquee-card { width: 132px; min-height: 132px; gap: 8px; font-size: 0.7rem; }
+  .insurer-marquee-card img { width: 48px; height: 48px; padding: 8px; }
+  .insurer-marquee-card small { font-size: 0.48rem; }
 }
 
 .entry-content {
