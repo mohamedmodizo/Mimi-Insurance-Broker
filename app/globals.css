@@ -86,6 +86,59 @@ button:disabled {
   background: #f1f3f7;
 }
 
+.insurer-backdrop.is-campaign {
+  background: var(--insurance-scene-accent);
+}
+
+.insurer-campaign-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--insurance-scene-accent);
+  background-position: center;
+  background-size: cover;
+  animation: insurance-campaign-reveal 5s both;
+}
+
+.insurer-campaign-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(12, 18, 26, 0.76), rgba(12, 18, 26, 0.26) 54%, rgba(12, 18, 26, 0.54)),
+    linear-gradient(180deg, rgba(12, 18, 26, 0.26), rgba(12, 18, 26, 0.68));
+}
+
+.insurer-campaign-caption {
+  position: absolute;
+  top: clamp(32px, 10vh, 112px);
+  left: clamp(24px, 8vw, 128px);
+  display: flex;
+  width: min(620px, 70vw);
+  flex-direction: column;
+  gap: 10px;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.58);
+}
+
+.insurer-campaign-caption span {
+  color: color-mix(in srgb, var(--insurance-scene-accent) 72%, #fff);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.insurer-campaign-caption strong {
+  max-width: 560px;
+  font-size: clamp(1.35rem, 3.2vw, 3rem);
+  line-height: 1.05;
+}
+
+.insurer-campaign-caption small {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
+}
+
 .insurer-backdrop-glow {
   position: absolute;
   top: 50%;
@@ -300,6 +353,12 @@ button:disabled {
   to { opacity: 1; transform: scale(1); }
 }
 
+@keyframes insurance-campaign-reveal {
+  0% { opacity: 0; transform: scale(1.04); }
+  12%, 84% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.02); }
+}
+
 @keyframes insurer-light-sweep {
   0%, 20% { opacity: 0; transform: translateX(0) skewX(-18deg); }
   36% { opacity: 1; }
@@ -312,7 +371,8 @@ button:disabled {
   .insurer-backdrop-halo,
   .insurer-backdrop-scene::after,
   .insurer-marquee-track,
-  .insurance-photo-stage { animation-duration: 0.01ms; }
+  .insurance-photo-stage,
+  .insurer-campaign-scene { animation-duration: 0.01ms; }
 }
 
 @media (max-width: 650px) {
@@ -324,6 +384,7 @@ button:disabled {
   .insurer-marquee-card img { width: 48px; height: 48px; padding: 8px; }
   .insurer-marquee-card small { font-size: 0.48rem; }
   .insurance-photo-caption { left: 22px; width: 52vw; }
+  .insurer-campaign-caption { top: 28px; left: 22px; width: 72vw; }
 }
 
 .entry-content {
@@ -893,6 +954,11 @@ textarea.text-field {
   margin: 14px 0;
 }
 
+.quote-selection {
+  display: grid;
+  gap: 4px;
+}
+
 .attachment-row,
 .summary-row,
 .answer-box,
@@ -951,6 +1017,51 @@ textarea.text-field {
 .emergency-box {
   border-color: #f2b8b5;
   background: var(--red-bg);
+}
+
+.location-picker {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: #faf7ff;
+}
+
+.location-picker-heading {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  color: var(--teal);
+}
+
+.location-picker-heading strong {
+  display: block;
+  color: var(--ink);
+}
+
+.location-picker-heading p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.location-picker .secondary-button {
+  width: 100%;
+  background: var(--teal);
+  border-color: var(--teal);
+  color: #fff;
+}
+
+.location-link {
+  color: var(--teal-2);
+  font-size: 0.9rem;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
 }
 
 .answer-box {

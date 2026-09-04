@@ -8,15 +8,20 @@ import { insuranceScenes } from "@/lib/insuranceScenes";
 const MARQUEE_DURATION_MS = 36000;
 const PHOTO_INTERVAL_MS = 9000;
 
-export function InsurerBackdrop() {
+export function InsurerBackdrop({ variant = "insurers" }: { variant?: "insurers" | "campaign" }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [phase, setPhase] = useState<"spotlight" | "marquee">("spotlight");
   const [photoIndex, setPhotoIndex] = useState(0);
-  const insurer = kenyaInsurers[activeIndex];
-  const scene = insuranceScenes[photoIndex];
+  const insurer = kenyaInsurers[activeIndex % kenyaInsurers.length];
+  const scene = insuranceScenes[variant === "campaign" ? activeIndex % insuranceScenes.length : photoIndex];
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
+      if (variant === "campaign") {
+        setActiveIndex((current) => (current + 1) % insuranceScenes.length);
+        return;
+      }
+
       if (phase === "marquee") {
         setActiveIndex(0);
         setPhase("spotlight");
@@ -32,10 +37,10 @@ export function InsurerBackdrop() {
     }, phase === "marquee" ? MARQUEE_DURATION_MS : 5000);
 
     return () => window.clearTimeout(timer);
-  }, [activeIndex, phase]);
+  }, [activeIndex, phase, variant]);
 
   useEffect(() => {
-    if (phase !== "marquee") return;
+    if (variant === "campaign" || phase !== "marquee") return;
 
     const nextPhoto = () => {
       setPhotoIndex((current) => {
@@ -47,11 +52,30 @@ export function InsurerBackdrop() {
     nextPhoto();
     const timer = window.setInterval(nextPhoto, PHOTO_INTERVAL_MS);
     return () => window.clearInterval(timer);
-  }, [phase]);
+  }, [phase, variant]);
 
   return (
-    <div className={`insurer-backdrop ${phase === "marquee" ? "is-marquee" : ""}`} style={{ "--insurer-accent": insurer.accent } as CSSProperties} aria-hidden="true">
-      {phase === "spotlight" ? (
+    <div
+      className={`insurer-backdrop ${variant === "campaign" ? "is-campaign" : phase === "marquee" ? "is-marquee" : ""}`}
+      style={{ "--insurer-accent": insurer.accent, "--insurance-scene-accent": scene.accent } as CSSProperties}
+      aria-hidden="true"
+    >
+      {variant === "campaign" ? (
+        <div
+          className="insurer-campaign-scene"
+          key={scene.type}
+          style={{ "--insurance-scene-accent": scene.accent, backgroundImage: `url(${scene.image})` } as CSSProperties}
+        >
+          <div className="insurer-campaign-scrim" />
+          <div className="insurer-campaign-caption">
+            <span>Insurance for every chapter</span>
+            <strong>{scene.slogan}</strong>
+            <small>
+              {scene.type} · {scene.description}
+            </small>
+          </div>
+        </div>
+      ) : phase === "spotlight" ? (
         <>
           <div className="insurer-backdrop-glow" />
           <div className="insurer-backdrop-scene" key={insurer.name}>

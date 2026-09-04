@@ -12,7 +12,7 @@ export default async function AccessPage({ params }: { params: Promise<{ token: 
   return (
     <main className="entry-screen">
       <section className="entry-band access-band">
-        <InsurerBackdrop />
+        <InsurerBackdrop variant="campaign" />
         <div className="entry-content access-content">
           <div className="brand-row">
             <div className="brand-mark" aria-hidden="true">

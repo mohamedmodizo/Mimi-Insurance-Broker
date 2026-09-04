@@ -10,6 +10,7 @@ import {
   HeartPulse,
   HelpCircle,
   MessageSquareText,
+  MapPin,
   PhoneCall,
   RefreshCw,
   ShieldCheck,
@@ -20,6 +21,7 @@ import { claimCategories, clientQuestions, getClaimQuestions, getEssentialMissin
 import type { EmergencyConfig } from "@/lib/config";
 import { InsurerAdRotator } from "@/components/InsurerAdRotator";
 import { InsurerBackdrop } from "@/components/InsurerBackdrop";
+import { quoteProductGroups } from "@/lib/quoteProducts";
 
 type PortalMode =
   | "home"
@@ -66,6 +68,14 @@ type Confirmation = {
   confirmationMessage: string;
 };
 
+type EmergencyDetails = {
+  emergencyType: string;
+  locationDetails: string;
+  latitude?: number;
+  longitude?: number;
+  locationUrl?: string;
+};
+
 const blankClient: ClientIdentity = {
   fullName: "",
   phone: "",
@@ -110,6 +120,8 @@ export function ClientPortal({
   const [claimAnswers, setClaimAnswers] = useState<Record<string, unknown>>({});
   const [simpleRequestType, setSimpleRequestType] = useState<RequestType>("CALLBACK");
   const [simpleDescription, setSimpleDescription] = useState("");
+  const [quoteCategory, setQuoteCategory] = useState("");
+  const [quoteProduct, setQuoteProduct] = useState("");
   const [attachments, setAttachments] = useState<UploadedAttachment[]>([]);
   const [uploadSessionId] = useState(() => crypto.randomUUID());
   const [chat, setChat] = useState<ChatMessage[]>([
@@ -153,7 +165,13 @@ export function ClientPortal({
 
   function chooseAction(item: (typeof actionItems)[number]) {
     setMode(item.mode);
-    if (item.requestType) setSimpleRequestType(item.requestType);
+    if (item.requestType) {
+      setSimpleRequestType(item.requestType);
+      if (item.requestType === "QUOTE") {
+        setQuoteCategory("");
+        setQuoteProduct("");
+      }
+    }
     addAiMessage(nextPromptForMode(item.mode, item.requestType));
   }
 
@@ -168,6 +186,12 @@ export function ClientPortal({
   async function submitCase(requestType: RequestType, extraAnswers: Record<string, unknown> = {}) {
     setSubmitting(true);
     try {
+      const requestDetails =
+        requestType === "QUOTE" && extraAnswers.quoteCategory && extraAnswers.quoteProduct
+          ? `Quote request for ${quoteProductGroups.find((item) => item.value === extraAnswers.quoteCategory)?.label ?? String(extraAnswers.quoteCategory)} / ${quoteProductGroups
+              .find((item) => item.value === extraAnswers.quoteCategory)
+              ?.products.find((item) => item.value === extraAnswers.quoteProduct)?.label ?? String(extraAnswers.quoteProduct)}${simpleDescription ? `: ${simpleDescription}` : ""}`
+          : simpleDescription || String(extraAnswers.eventDescription ?? "");
       const response = await fetch("/api/client/cases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -182,7 +206,7 @@ export function ClientPortal({
           clientRequest:
             requestType === "CLAIM"
               ? "Client reported a claim and asked the broker to advise on next steps."
-              : simpleDescription || String(extraAnswers.eventDescription ?? "")
+              : requestDetails
         })
       });
 
@@ -298,11 +322,19 @@ export function ClientPortal({
                 isSubmitting={isSubmitting}
                 onClientChange={setClient}
                 onDescriptionChange={setSimpleDescription}
+                quoteCategory={quoteCategory}
+                quoteProduct={quoteProduct}
+                onQuoteCategoryChange={(value) => {
+                  setQuoteCategory(value);
+                  setQuoteProduct("");
+                }}
+                onQuoteProductChange={setQuoteProduct}
                 onBack={() => setMode("home")}
                 onSubmit={() =>
                   submitCase(simpleRequestType, {
                     eventDescription: simpleDescription,
-                    requestType: simpleRequestType
+                    requestType: simpleRequestType,
+                    ...(simpleRequestType === "QUOTE" ? { quoteCategory, quoteProduct } : {})
                   })
                 }
               />
@@ -336,10 +368,11 @@ export function ClientPortal({
                 onClientChange={setClient}
                 onDescriptionChange={setSimpleDescription}
                 onBack={() => setMode("home")}
-                onSubmit={() =>
+                onSubmit={(emergencyDetails) =>
                   submitCase("EMERGENCY", {
                     eventDescription: simpleDescription,
-                    emergencyServices: true
+                    emergencyServices: true,
+                    ...emergencyDetails
                   })
                 }
               />
@@ -745,6 +778,10 @@ function SimpleRequestPanel({
   isSubmitting,
   onClientChange,
   onDescriptionChange,
+  quoteCategory,
+  quoteProduct,
+  onQuoteCategoryChange,
+  onQuoteProductChange,
   onBack,
   onSubmit
 }: {
@@ -754,15 +791,29 @@ function SimpleRequestPanel({
   isSubmitting: boolean;
   onClientChange: (client: ClientIdentity) => void;
   onDescriptionChange: (value: string) => void;
+  quoteCategory: string;
+  quoteProduct: string;
+  onQuoteCategoryChange: (value: string) => void;
+  onQuoteProductChange: (value: string) => void;
   onBack: () => void;
   onSubmit: () => void;
 }) {
+  const quoteIsComplete = requestType !== "QUOTE" || (quoteCategory !== "" && quoteProduct !== "");
+
   return (
     <div>
       <PanelHeader title={requestLabel(requestType)} onBack={onBack} />
       <ClientMiniForm client={client} onChange={onClientChange} />
+      {requestType === "QUOTE" && (
+        <QuoteSelection
+          category={quoteCategory}
+          product={quoteProduct}
+          onCategoryChange={onQuoteCategoryChange}
+          onProductChange={onQuoteProductChange}
+        />
+      )}
       <label className="question-label" htmlFor="simple-description">
-        What should your broker know?
+        {requestType === "QUOTE" ? "Anything else your broker should know (optional)" : "What should your broker know?"}
       </label>
       <textarea
         className="text-field"
@@ -771,9 +822,52 @@ function SimpleRequestPanel({
         rows={5}
         value={description}
       />
-      <button className="primary-button full-width" disabled={isSubmitting || !client.fullName || !client.phone || !description.trim()} onClick={onSubmit} type="button">
+      <button className="primary-button full-width" disabled={isSubmitting || !client.fullName || !client.phone || !quoteIsComplete || (requestType !== "QUOTE" && !description.trim())} onClick={onSubmit} type="button">
         {isSubmitting ? "Submitting..." : "Submit Request"}
       </button>
+    </div>
+  );
+}
+
+function QuoteSelection({
+  category,
+  product,
+  onCategoryChange,
+  onProductChange
+}: {
+  category: string;
+  product: string;
+  onCategoryChange: (value: string) => void;
+  onProductChange: (value: string) => void;
+}) {
+  const selectedGroup = quoteProductGroups.find((item) => item.value === category);
+
+  return (
+    <div className="quote-selection">
+      <label className="question-label" htmlFor="quote-category">
+        What type of insurance quote do you need?
+        <select className="text-field" id="quote-category" onChange={(event) => onCategoryChange(event.target.value)} value={category}>
+          <option value="">Choose an insurance area</option>
+          {quoteProductGroups.map((group) => (
+            <option key={group.value} value={group.value}>
+              {group.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {selectedGroup && (
+        <label className="question-label" htmlFor="quote-product">
+          Which cover or product interests you?
+          <select className="text-field" id="quote-product" onChange={(event) => onProductChange(event.target.value)} value={product}>
+            <option value="">Choose a product</option>
+            {selectedGroup.products.map((item) => (
+              <option key={item.value} value={item.value}>
+                {item.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
     </div>
   );
 }
@@ -848,8 +942,39 @@ function EmergencyPanel({
   onClientChange: (client: ClientIdentity) => void;
   onDescriptionChange: (value: string) => void;
   onBack: () => void;
-  onSubmit: () => void;
+  onSubmit: (details: EmergencyDetails) => void;
 }) {
+  const [emergencyType, setEmergencyType] = useState("");
+  const [locationDetails, setLocationDetails] = useState("");
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationStatus, setLocationStatus] = useState("");
+
+  function shareCurrentLocation() {
+    if (!navigator.geolocation) {
+      setLocationStatus("Location sharing is not available on this device. Enter a nearby landmark instead.");
+      return;
+    }
+
+    setLocationStatus("Requesting your location...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextCoordinates = {
+          latitude: Number(position.coords.latitude.toFixed(6)),
+          longitude: Number(position.coords.longitude.toFixed(6))
+        };
+        setCoordinates(nextCoordinates);
+        setLocationStatus("Location pin ready. Add a landmark or building name if helpful.");
+      },
+      () => setLocationStatus("We could not access your location. Enter a nearby landmark instead."),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  const canSubmit = !isSubmitting && Boolean(client.fullName) && Boolean(client.phone) && Boolean(emergencyType) && Boolean(description.trim());
+  const locationUrl = coordinates
+    ? `https://www.openstreetmap.org/?mlat=${coordinates.latitude}&mlon=${coordinates.longitude}#map=17/${coordinates.latitude}/${coordinates.longitude}`
+    : undefined;
+
   return (
     <div>
       <PanelHeader title="Emergency Assistance" onBack={onBack} />
@@ -871,6 +996,52 @@ function EmergencyPanel({
         <li>Exchange relevant details with other parties.</li>
       </ul>
       <ClientMiniForm client={client} onChange={onClientChange} />
+      <label className="question-label" htmlFor="emergency-type">
+        Type of emergency
+        <select className="text-field" id="emergency-type" onChange={(event) => setEmergencyType(event.target.value)} value={emergencyType}>
+          <option value="">Choose an emergency type</option>
+          <option value="AMBULANCE">Ambulance or medical transport</option>
+          <option value="DOCTOR">Doctor or medical assistance</option>
+          <option value="MOTOR_ROADSIDE">Motor accident or roadside assistance</option>
+          <option value="POLICE_SECURITY">Police or security assistance</option>
+          <option value="FIRE_RESCUE">Fire and rescue</option>
+          <option value="OTHER">Other urgent assistance</option>
+        </select>
+      </label>
+      <div className="location-picker">
+        <div className="location-picker-heading">
+          <MapPin size={22} aria-hidden="true" />
+          <div>
+            <strong>Patient or client location</strong>
+            <p>Share a location pin so the broker knows where help is needed.</p>
+          </div>
+        </div>
+        <button className="secondary-button" onClick={shareCurrentLocation} type="button">
+          <MapPin size={18} />
+          Drop pin at my current location
+        </button>
+        {coordinates && (
+          <a
+            className="location-link"
+            href={locationUrl}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Pinned location: {coordinates.latitude}, {coordinates.longitude}
+          </a>
+        )}
+        {locationStatus && <p className="help-text">{locationStatus}</p>}
+        <label className="question-label" htmlFor="emergency-location">
+          Nearby landmark or location details
+          <input
+            className="text-field"
+            id="emergency-location"
+            onChange={(event) => setLocationDetails(event.target.value)}
+            placeholder="For example: Aga Khan Hospital, Parklands"
+            value={locationDetails}
+          />
+        </label>
+      </div>
       <label className="question-label" htmlFor="emergency-description">
         Tell your broker what happened
       </label>
@@ -881,7 +1052,12 @@ function EmergencyPanel({
         rows={5}
         value={description}
       />
-      <button className="danger-button full-width" disabled={isSubmitting || !client.fullName || !client.phone || !description.trim()} onClick={onSubmit} type="button">
+      <button
+        className="danger-button full-width"
+        disabled={!canSubmit}
+        onClick={() => onSubmit({ emergencyType, locationDetails, locationUrl, ...coordinates })}
+        type="button"
+      >
         {isSubmitting ? "Submitting..." : "Record Urgent Case"}
       </button>
     </div>
