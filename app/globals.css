@@ -197,12 +197,64 @@ button:disabled {
   overflow: hidden;
 }
 
+.insurance-photo-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--insurance-scene-accent);
+  background-position: center;
+  background-size: cover;
+  animation: insurance-photo-in 900ms ease-out both;
+  transition: background-image 900ms ease;
+}
+
+.insurance-photo-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(14, 20, 30, 0.84), rgba(14, 20, 30, 0.35) 46%, rgba(14, 20, 30, 0.7)),
+    linear-gradient(180deg, rgba(14, 20, 30, 0.2), rgba(14, 20, 30, 0.58));
+}
+
+.insurance-photo-caption {
+  position: absolute;
+  top: 50%;
+  left: clamp(22px, 8vw, 128px);
+  display: flex;
+  width: min(360px, 68vw);
+  flex-direction: column;
+  gap: 8px;
+  color: #fff;
+  transform: translateY(-50%);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
+}
+
+.insurance-photo-caption span {
+  color: color-mix(in srgb, var(--insurance-scene-accent) 75%, #fff);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.insurance-photo-caption strong {
+  font-size: clamp(1.3rem, 2.8vw, 2.7rem);
+  line-height: 1.05;
+}
+
+.insurance-photo-caption small {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
+}
+
 .insurer-marquee-track {
   display: flex;
   gap: 22px;
   width: max-content;
   padding: 24px;
-  animation: insurer-marquee-pass 18s linear both;
+  position: relative;
+  z-index: 1;
+  animation: insurer-marquee-pass 36s linear both;
 }
 
 .insurer-marquee-card {
@@ -215,7 +267,7 @@ button:disabled {
   gap: 12px;
   border: 1px solid color-mix(in srgb, var(--insurer-accent) 64%, #fff);
   border-radius: 8px;
-  background: var(--insurer-accent);
+  background: color-mix(in srgb, var(--insurer-accent) 80%, rgba(20, 24, 34, 0.76));
   box-shadow: 0 16px 32px rgba(46, 41, 62, 0.18);
   color: #fff;
   font-size: 0.88rem;
@@ -243,6 +295,11 @@ button:disabled {
   to { transform: translateX(-100%); }
 }
 
+@keyframes insurance-photo-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
 @keyframes insurer-light-sweep {
   0%, 20% { opacity: 0; transform: translateX(0) skewX(-18deg); }
   36% { opacity: 1; }
@@ -254,7 +311,8 @@ button:disabled {
   .insurer-backdrop-scene img,
   .insurer-backdrop-halo,
   .insurer-backdrop-scene::after,
-  .insurer-marquee-track { animation-duration: 0.01ms; }
+  .insurer-marquee-track,
+  .insurance-photo-stage { animation-duration: 0.01ms; }
 }
 
 @media (max-width: 650px) {
@@ -265,6 +323,7 @@ button:disabled {
   .insurer-marquee-card { width: 132px; min-height: 132px; gap: 8px; font-size: 0.7rem; }
   .insurer-marquee-card img { width: 48px; height: 48px; padding: 8px; }
   .insurer-marquee-card small { font-size: 0.48rem; }
+  .insurance-photo-caption { left: 22px; width: 52vw; }
 }
 
 .entry-content {
