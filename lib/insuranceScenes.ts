@@ -39,7 +39,7 @@ export const insuranceScenes: InsuranceScene[] = [
     type: "Fire insurance",
     description: "Protection for property and business risks",
     slogan: "Stand strong when the unexpected happens.",
-    image: "https://images.unsplash.com/photo-1517960413843-0aee8e2c2d22?auto=format&fit=crop&w=2200&q=84",
+    image: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=2200&q=84",
     accent: "#c4522f"
   },
   {
