@@ -9,7 +9,7 @@ const demoEmail = (process.env.BROKER_DEMO_EMAIL ?? "broker@example.com").toLowe
 const demoPassword = process.env.BROKER_DEMO_PASSWORD ?? "BrokerDemo!2026";
 const demoTotpSecret = process.env.BROKER_DEMO_TOTP_SECRET ?? "JBSWY3DPEHPK3PXP";
 const demoPortalToken = "demo-secure-link-2026";
-const agencyName = "Mimi Insurance Broker";
+const agencyName = "Mimi Insurance Agency";
 
 async function main() {
   await mkdir(path.join(process.cwd(), "work", "storage", "uploads"), { recursive: true });

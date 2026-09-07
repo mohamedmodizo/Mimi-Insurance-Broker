@@ -1,4 +1,4 @@
-# Mimi Insurance Broker Portal
+# Mimi Insurance Agency Portal
 
 Secure mobile-first 24/7 insurance client assistance and claims portal for market validation.
 

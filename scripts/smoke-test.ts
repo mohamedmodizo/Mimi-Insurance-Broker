@@ -79,7 +79,7 @@ async function createClaim(attachmentId: string) {
       },
       uploadedAttachmentIds: [attachmentId],
       conversation: [
-        { senderRole: "AI", content: "Welcome to Mimi Insurance Broker 24/7 Client Assistance." },
+        { senderRole: "AI", content: "Welcome to Mimi Insurance Agency 24/7 Client Assistance." },
         { senderRole: "CLIENT", content: "I need to report a motor accident." }
       ],
       clientRequest: "Please contact the insurer and advise on the next steps."
